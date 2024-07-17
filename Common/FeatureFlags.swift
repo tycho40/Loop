@@ -35,7 +35,6 @@ struct FeatureFlagConfiguration: Decodable {
     let siriEnabled: Bool
     let simpleBolusCalculatorEnabled: Bool
     let usePositiveMomentumAndRCForManualBoluses: Bool
-    let dynamicCarbAbsorptionEnabled: Bool
     let adultChildInsulinModelSelectionEnabled: Bool
     let profileExpirationSettingsViewEnabled: Bool
     let missedMealNotifications: Bool
@@ -214,8 +213,6 @@ struct FeatureFlagConfiguration: Decodable {
         self.adultChildInsulinModelSelectionEnabled = false
         #endif
 
-        self.dynamicCarbAbsorptionEnabled = true
-
         // ProfileExpirationSettingsView is inverse, since the default state is enabled.
         #if PROFILE_EXPIRATION_SETTINGS_VIEW_DISABLED
         self.profileExpirationSettingsViewEnabled = false
@@ -266,11 +263,11 @@ extension FeatureFlagConfiguration : CustomDebugStringConvertible {
             "* allowDebugFeatures: \(allowDebugFeatures)",
             "* simpleBolusCalculatorEnabled: \(simpleBolusCalculatorEnabled)",
             "* usePositiveMomentumAndRCForManualBoluses: \(usePositiveMomentumAndRCForManualBoluses)",
-            "* dynamicCarbAbsorptionEnabled: \(dynamicCarbAbsorptionEnabled)",
             "* adultChildInsulinModelSelectionEnabled: \(adultChildInsulinModelSelectionEnabled)",
             "* profileExpirationSettingsViewEnabled: \(profileExpirationSettingsViewEnabled)",
             "* missedMealNotifications: \(missedMealNotifications)",
-            "* allowAlgorithmExperiments: \(allowAlgorithmExperiments)"
+            "* allowAlgorithmExperiments: \(allowAlgorithmExperiments)",
+            "* allowExperimentalFeatures: \(allowExperimentalFeatures)"
         ].joined(separator: "\n")
     }
 }
@@ -288,6 +285,20 @@ extension FeatureFlagConfiguration {
             } else {
                 return false
             }
+        }
+        #else
+        return false
+        #endif
+    }
+    
+    var allowExperimentalFeatures: Bool {
+        #if EXPERIMENTAL_FEATURES_ENABLED
+        return true
+        #elseif EXPERIMENTAL_FEATURES_ENABLED_CONDITIONALLY
+        if debugEnabled {
+            return true
+        } else {
+            return UserDefaults.appGroup?.allowExperimentalFeatures ?? false
         }
         #else
         return false
